@@ -56,8 +56,18 @@ class FlexFormContainerContainer extends AbstractContainer
             . '[_TOGGLE]';
 
         $moveAndDeleteContent = [];
-        $userHasAccessToDefaultLanguage = $this->getBackendUserAuthentication()->checkLanguageAccess(0);
-        if ($userHasAccessToDefaultLanguage) {
+        $userHasAccessToLanguage = $this->getBackendUserAuthentication()->checkLanguageAccess(0);
+        if (isset($GLOBALS['TCA'][$table]['ctrl']['languageField'])) {
+			$languageField = $GLOBALS['TCA'][$table]['ctrl']['languageField'];
+			if (isset($row[$languageField]) && is_array($row[$languageField]) && sizeof($row[$languageField]) > 0) {
+				foreach($row[$languageField] as $languageUid) {
+					$userHasAccessToLanguage = $userHasAccessToLanguage
+							|| $this->getBackendUserAuthentication()->checkLanguageAccess($languageUid);
+				}
+			}
+		}
+
+        if ($userHasAccessToLanguage) {
             $moveAndDeleteContent[] = '<button type="button" class="btn btn-default t3js-delete"><span title="' . htmlspecialchars($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:delete')) . '">' . $iconFactory->getIcon('actions-edit-delete', Icon::SIZE_SMALL)->render() . '</span></button>';
             $moveAndDeleteContent[] = '<button type="button" class="btn btn-default t3js-sortable-handle sortableHandle"><span title="' . htmlspecialchars($languageService->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:sortable.dragmove')) . '">' . $iconFactory->getIcon('actions-move-move', Icon::SIZE_SMALL)->render() . '</span></button>';
         }
