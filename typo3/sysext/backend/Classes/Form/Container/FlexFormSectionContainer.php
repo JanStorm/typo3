@@ -49,7 +49,18 @@ class FlexFormSectionContainer extends AbstractContainer
         $flexFormFieldName = $this->data['flexFormFieldName'];
         $flexFormSheetName = $this->data['flexFormSheetName'];
 
-        $userHasAccessToDefaultLanguage = $this->getBackendUserAuthentication()->checkLanguageAccess(0);
+        $userHasAccessToLanguage = $this->getBackendUserAuthentication()->checkLanguageAccess(0);
+        $table = $this->data['tableName'];
+        if (isset($GLOBALS['TCA'][$table]['ctrl']['languageField'])) {
+			$languageField = $GLOBALS['TCA'][$table]['ctrl']['languageField'];
+			$row = isset($this->data['databaseRow']) ? $this->data['databaseRow'] : [];
+			if (isset($row[$languageField]) && is_array($row[$languageField]) && sizeof($row[$languageField]) > 0) {
+				foreach($row[$languageField] as $languageUid) {
+					$userHasAccessToLanguage = $userHasAccessToLanguage
+							|| $this->getBackendUserAuthentication()->checkLanguageAccess($languageUid);
+				}
+			}
+		}
 
         $resultArray = $this->initializeResultArray();
 
@@ -106,7 +117,7 @@ class FlexFormSectionContainer extends AbstractContainer
         }
         // Create new elements links
         $createElementsHtml = [];
-        if ($userHasAccessToDefaultLanguage) {
+        if ($userHasAccessToLanguage) {
             $createElementsHtml[] = '<div class="t3-form-field-add-flexsection">';
             $createElementsHtml[] =    '<div class="btn-group">';
             $createElementsHtml[] =        implode('', $containerTemplatesHtml);
@@ -138,7 +149,7 @@ class FlexFormSectionContainer extends AbstractContainer
         $html[] =             '<div';
         $html[] =                 'id="' . htmlspecialchars($hashedSectionContainerId) . '"';
         $html[] =                 'class="panel-group panel-hover t3-form-field-container-flexsection t3-flex-container"';
-        $html[] =                 'data-t3-flex-allow-restructure="' . ($userHasAccessToDefaultLanguage ? '1' : '0') . '"';
+        $html[] =                 'data-t3-flex-allow-restructure="' . ($userHasAccessToLanguage ? '1' : '0') . '"';
         $html[] =             '>';
         $html[] =                 $resultArray['html'];
         $html[] =             '</div>';
